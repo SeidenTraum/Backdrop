@@ -7,7 +7,7 @@
 # Note: Wallpapers should be named in a format that is either 'wallpaper' or 'wall-paper', using only lowercase letters and no spaces.
 # It can sanitize the wallpaper name tho.
 # Author: SeidenTraum (J.P.) @ github.com/SeidenTraum
-# Date: 2024-03-15
+# Date: 30/06/2024
 
 declare YELLOW
 declare RED
@@ -18,10 +18,10 @@ declare GREEN
 declare PINK
 declare NC
 
-declare -gr CONFIG
-declare -gr WALL_DIR
-declare -gr ENABLE_NOTIFICATIONS
-declare -gr ENABLE_FZF
+declare -g CONFIG
+declare -g WALL_DIR
+declare -g ENABLE_NOTIFICATIONS
+declare -g ENABLE_FZF
 
 # Parse the config file
 parse_config() {
@@ -208,11 +208,10 @@ remove_wallpaper() {
 # Display help message
 show_help() {
     info_msg "A simple script to manage wallpapers in ${YELLOW}Hyprland."
-    info_msg "Author: ${YELLOW}Cookie${RED}Fiend${NC}"
     info_msg "Usage: ${GREEN}backdrop ${YELLOW}[wallpaper name]${NC}   : Sets wallpaper"
     info_msg "       ${GREEN}backdrop ${YELLOW}-l, --list${NC}         : List all wallpapers"
     info_msg "       ${GREEN}backdrop ${YELLOW}-f, --fuzzy${NC}        : Fuzzy search for wallpaper"
-    info_msg "       ${GREEN}backdrop ${YELLOW}-w, --wofi${NC}        : Use wofi to change wallpaper"
+    info_msg "       ${GREEN}backdrop ${YELLOW}-w, --wofi${NC}         : Use wofi to change wallpaper"
     info_msg "       ${GREEN}backdrop ${YELLOW}-c, --current${NC}      : Display current wallpaper"
     info_msg "       ${GREEN}backdrop ${YELLOW}-a, --add${NC}          : Add wallpaper"
     info_msg "       ${GREEN}backdrop ${YELLOW}-r, --remove${NC}       : Remove wallpaper"
