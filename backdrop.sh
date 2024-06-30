@@ -1,13 +1,19 @@
 #!/bin/bash
 
-# This script is designed to change the desktop wallpaper on a system using the Sway window manager.
-# The wallpapers are stored in the directory specified by the $WALL_DIR variable.
-# The script utilizes the 'swaybg' command to set the wallpaper.
-# It creates a symbolic link to the selected wallpaper in the $WALL_DIR/current directory and sets it as the active wallpaper.
-# Note: Wallpapers should be named in a format that is either 'wallpaper' or 'wall-paper', using only lowercase letters and no spaces.
-# It can sanitize the wallpaper name tho.
-# Author: SeidenTraum (J.P.) @ github.com/SeidenTraum
-# Date: 30/06/2024
+# Backdrop is a script to help manage wallpapers
+# author: SeidemTraum (J.P) @github.com/SeidemTraum
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 declare YELLOW
 declare RED
