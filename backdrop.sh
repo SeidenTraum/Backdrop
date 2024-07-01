@@ -15,7 +15,11 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+declare -g DEBUG=true
+
+# Global variables
 declare -g CONFIG
+declare -g WALLNAME
 declare -g WALL_DIR
 declare -g ENABLE_NOTIFICATIONS
 declare -g ENABLE_FZF
@@ -23,24 +27,6 @@ declare -g WALL_CURRENT
 declare -g WALL_LIST
 declare -g WALL_LIST_CLEAN
 declare -g NEWNAME
-
-# Parse the config file
-parse_config() {
-    local key=$1
-    local value
-    # key = variable name
-    # value = value stored inside key
-    value="$(sed -n "s/^$key = \(.*\)/\1/p" "$CONFIG")"
-    # This regex is used to extract the value from the config file
-    echo "$value" # Writing it to stdout
-    return 0
-}
-
-# Parsing config file
-CONFIG="$HOME/.config/backdrop/bd.config"
-WALL_DIR="$(parse_config "wallpaper_dir")"
-ENABLE_NOTIFICATIONS="$(parse_config "enable_notifications")"
-ENABLE_FZF="$(parse_config "enable_fzf")"
 
 # Color codes
 declare -r YELLOW="\033[0;33m"
@@ -52,11 +38,16 @@ declare -r GREEN="\033[0;32m"
 declare -r PINK="\033[0;35m"
 declare -r NC="\033[0m" # No Color
 
+# Dependencies
+declare -ga DEPENDENCIES
+declare -ga OPTIONAL_DEPENDENCIES
+
 # Functions for output messages
 error_msg() { echo -e "${BRED}! $1${NC}"; }
 warning_msg() { echo -e "${YELLOW}! $1${NC}"; } # I barely used this one, will refactor the code to use it more
 info_msg() { echo -e "${BLUE}$1${NC}"; }
 success_msg() { echo -e "${GREEN}$1${NC}"; }
+debug_msg() { if [ "$DEBUG" == "true" ]; then echo -e "${PINK}:: $1${NC}"; fi }
 notify_user() {
     if [ "$ENABLE_NOTIFICATIONS" = "true" ]; then
         notify-send "Wallpaper changed" "New wallpaper: $1" -i "$WALL_DIR/$1" -u low -t 1000
@@ -74,32 +65,61 @@ check_command() {
     return 0
 }
 
-# Dependency check
-DEPENDENCIES=(
-    "swaybg"
-    )
-OPTIONAL_DEPENDENCIES=(
-    "wofi"
-    "fzf"
-    "kitty"
-    )
+config_create() {
+    # Creates config file with default values
+    # Checking every relevant variable exists
+    if [ "$1" == "skip-touch" ]; then
+        touch "$CONFIG"
+    fi
+    messageInfo "Configuration file created at '$CONFIG'"
+    printf "[ Config ]\n" > "$CONFIG"
+    local -A defaults=([wallpaper_dir]="$HOME/Pictures/Wallpapers" \
+                         [enable_notifications]="true" \
+                         [enable_fzf]="true")
 
-for cmd in "${DEPENDENCIES[@]}"; do
-    declare result
-    result=$(check_command "$cmd") # if not installed, exit
-    if [ "$result" == 0 ]; then
-        error_msg "The command '$cmd' is not installed"
+    for key in "${!defaults[@]}"; do
+        printf "%s=%s\n" "$key" "${defaults[$key]}"
+    done >> "$CONFIG"
+    messageInfo "Configuration file populated with defaults"
+}
+
+config_add() {
+    # Changes a value in the config file, $1 = key, $2 = value
+    local key="$1"
+    local value="$2"
+
+    if checkEmpty "$key"; then
+        messageError "Key cannot be empty"
+        return 1
+    fi
+    if checkEmpty "$value"; then
+        messageError "Value cannot be empty"
+        return 1
+    fi
+    if ! grep -q "$key" "$configPath"; then
+        messageError "Key does not exist"
+        return 1
+    fi
+
+    sed -i "/$key/c$key=$value" "$configPath"
+}
+
+# Parse the config file
+config_parse() {
+    local key=$1
+    local value
+    # Checking if the bd.config file exists
+    if [ ! -f "$CONFIG" ]; then
+        error_msg "The config file does not exist"
         exit 1
     fi
-done
-for cmd in "${OPTIONAL_DEPENDENCIES[@]}"; do
-    check_command "$cmd"
-done
-
-WALL_CURRENT=$(readlink -fn "$WALL_DIR/current")
-WALL_LIST=$(for file in "$WALL_DIR"/*; do [ "$(basename "$file")" != "current" ] && basename "$file"; done)
-WALL_LIST_CLEAN=$(echo "$WALL_LIST" | sed -e 's/\.[^.]*$//' -e 's/-/ /g' -e 's/\b\(.\)/\u\1/g' | tr '[:upper:]' '[:lower:]')
-NEWNAME="NONE" # Used for sanitizer
+    # key = variable name
+    # value = value stored inside key
+    value="$(sed -n "s/^$key = \(.*\)/\1/p" "$CONFIG")"
+    # This regex is used to extract the value from the config file
+    echo "$value" # Writing it to stdout
+    return 0
+}
 
 # Sanitizes the wallpaper name
 sanitizer() {
@@ -378,6 +398,56 @@ wall_man() {
     fi
 }
 
+# Parsing config file
+CONFIG="$HOME/.config/backdrop/bd.config"
+WALL_DIR="$(config_parse "wallpaper_dir")"
+ENABLE_NOTIFICATIONS="$(config_parse "enable_notifications")"
+ENABLE_FZF="$(config_parse "enable_fzf")"
+
+# Checking if variables are empty
+if [ -z "$CONFIG" ] || [ -z "$WALL_DIR" ]; then
+    error_msg "One or more variables are empty"
+    exit 1
+fi
+if [ -z "$ENABLE_NOTIFICATIONS" ] || [ -z "$ENABLE_FZF" ]; then
+    if DEBUG; then
+        warning_msg "One or more optional flags are empty"
+    fi
+fi
+debug_msg "Variables"
+debug_msg "CONFIG: $CONFIG"
+debug_msg "WALL_DIR: $WALL_DIR"
+debug_msg "ENABLE_NOTIFICATIONS: $ENABLE_NOTIFICATIONS"
+debug_msg "ENABLE_FZF: $ENABLE_FZF"
+
+# Dependency check
+DEPENDENCIES=(
+    "swaybg"
+    )
+OPTIONAL_DEPENDENCIES=(
+    "wofi"
+    "fzf"
+    "kitty"
+    )
+
+for cmd in "${DEPENDENCIES[@]}"; do
+    declare result
+    result=$(check_command "$cmd") # if not installed, exit
+    if [ "$result" == 0 ]; then
+        error_msg "The command '$cmd' is not installed"
+        exit 1
+    fi
+    unset result
+done
+for cmd in "${OPTIONAL_DEPENDENCIES[@]}"; do
+    check_command "$cmd"
+done
+
+WALL_CURRENT=$(readlink -fn "$WALL_DIR/current")
+WALL_LIST=$(for file in "$WALL_DIR"/*; do [ "$(basename "$file")" != "current" ] && basename "$file"; done)
+WALL_LIST_CLEAN=$(echo "$WALL_LIST" | sed -e 's/\.[^.]*$//' -e 's/-/ /g' -e 's/\b\(.\)/\u\1/g' | tr '[:upper:]' '[:lower:]')
+NEWNAME="NONE" # Used for sanitizer
+
 # Checking if config file exists
 if [ ! -f "$CONFIG" ]; then
     error_msg "The config file does not exist"
@@ -385,6 +455,6 @@ if [ ! -f "$CONFIG" ]; then
 fi
 
 # Execute main function
-declare -g WALLNAME="${1,,}"
+WALLNAME="${1,,}"
 wall_man "$@"
 
