@@ -87,7 +87,8 @@ OPTIONAL_DEPENDENCIES=(
 for cmd in "${DEPENDENCIES[@]}"; do
     declare result
     result=$(check_command "$cmd") # if not installed, exit
-    if [ "$result" -ne 0 ]; then
+    if [ "$result" == 0 ]; then
+        error_msg "The command '$cmd' is not installed"
         exit 1
     fi
 done
@@ -386,3 +387,4 @@ fi
 # Execute main function
 declare -g WALLNAME="${1,,}"
 wall_man "$@"
+
