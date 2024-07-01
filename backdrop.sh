@@ -96,12 +96,12 @@ config_add() {
         messageError "Value cannot be empty"
         return 1
     fi
-    if ! grep -q "$key" "$configPath"; then
+    if ! grep -q "$key" "$CONFIG"; then
         messageError "Key does not exist"
         return 1
     fi
 
-    sed -i "/$key/c$key=$value" "$configPath"
+    sed -i "/$key/c$key=$value" "$CONFIG"
 }
 
 # Parse the config file
