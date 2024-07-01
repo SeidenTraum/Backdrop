@@ -373,7 +373,7 @@ wall_man() {
     fi
 
     # Removing the path from $WALL_CURRENT
-    WALL_CURRENT=${WALL_CURRENT##*/}    
+    WALL_CURRENT=${WALL_CURRENT##*/}
 
     if [ "$WALLNAME" != "$WALL_CURRENT" ]; then
         ln -fsn "$WALL_DIR/$WALLNAME" "$WALL_DIR/current"
