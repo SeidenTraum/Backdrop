@@ -15,8 +15,6 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-declare -g DEBUG=true
-
 # Global variables
 declare -g CONFIG
 declare -g WALLNAME
@@ -67,13 +65,14 @@ check_command() {
 
 config_create() {
     # Creates config file with default values
+    local -A defaults
     # Checking every relevant variable exists
     if [ "$1" == "skip-touch" ]; then
         touch "$CONFIG"
     fi
     messageInfo "Configuration file created at '$CONFIG'"
     printf "[ Config ]\n" > "$CONFIG"
-    local -A defaults=([wallpaper_dir]="$HOME/Pictures/Wallpapers" \
+    defaults=([wallpaper_dir]="$HOME/Pictures/Wallpapers" \
                          [enable_notifications]="true" \
                          [enable_fzf]="true")
 
@@ -414,6 +413,7 @@ if [ -z "$ENABLE_NOTIFICATIONS" ] || [ -z "$ENABLE_FZF" ]; then
         warning_msg "One or more optional flags are empty"
     fi
 fi
+debug_msg "Debug: $DEBUG"
 debug_msg "Variables"
 debug_msg "CONFIG: $CONFIG"
 debug_msg "WALL_DIR: $WALL_DIR"
