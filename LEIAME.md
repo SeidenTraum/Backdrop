@@ -37,8 +37,8 @@
 </p>
 <ul>
     <li><code>wallpaper_dir</code>: O diretório onde seus papéis de parede estão armazenados.</li>
-    <li><code>enable_notifications</code>: Ativar ou desativar notificações (true/false) (ainda não implementado).</li>
-    <li><code>enable_fzf</code>: Ativar ou desativar busca fuzzy (true/false) (também não implementado ainda).</li>
+    <li><code>enable_notifications</code>: Ativar ou desativar notificações (true/false).</li>
+    <li><code>enable_fzf</code>: Ativar ou desativar busca fuzzy (true/false).</li>
 </ul>
 
 <h3>Dependências</h3>

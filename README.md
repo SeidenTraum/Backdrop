@@ -37,8 +37,8 @@
 </p>
 <ul>
     <li><code>wallpaper_dir</code>: The directory where your wallpapers are stored.</li>
-    <li><code>enable_notifications</code>: Enable or disable notifications (true/false) (not implemented yet).</li>
-    <li><code>enable_fzf</code>: Enable or disable fuzzy search (true/false) (also not implemented yet).</li>
+    <li><code>enable_notifications</code>: Enable or disable notifications (true/false).</li>
+    <li><code>enable_fzf</code>: Enable or disable fuzzy search (true/false).</li>
 </ul>
 
 <h3>Dependencies</h3>
