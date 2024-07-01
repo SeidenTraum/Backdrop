@@ -15,19 +15,14 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-declare YELLOW
-declare RED
-declare BRED
-declare BLUE
-declare BBLUE
-declare GREEN
-declare PINK
-declare NC
-
 declare -g CONFIG
 declare -g WALL_DIR
 declare -g ENABLE_NOTIFICATIONS
 declare -g ENABLE_FZF
+declare -g WALL_CURRENT
+declare -g WALL_LIST
+declare -g WALL_LIST_CLEAN
+declare -g NEWNAME
 
 # Parse the config file
 parse_config() {
@@ -41,19 +36,21 @@ parse_config() {
     return 0
 }
 
+# Parsing config file
 CONFIG="$HOME/.config/backdrop/bd.config"
 WALL_DIR="$(parse_config "wallpaper_dir")"
 ENABLE_NOTIFICATIONS="$(parse_config "enable_notifications")"
 ENABLE_FZF="$(parse_config "enable_fzf")"
 
-YELLOW="\033[0;33m"
-RED="\033[0;31m"
-BRED="\033[1;31m"
-BLUE="\033[0;34m"
-BBLUE="\033[1;34m"
-GREEN="\033[0;32m"
-PINK="\033[0;35m"
-NC="\033[0m" # No Color
+# Color codes
+declare -r YELLOW="\033[0;33m"
+declare -r RED="\033[0;31m"
+declare -r BRED="\033[1;31m"
+declare -r BLUE="\033[0;34m"
+declare -r BBLUE="\033[1;34m"
+declare -r GREEN="\033[0;32m"
+declare -r PINK="\033[0;35m"
+declare -r NC="\033[0m" # No Color
 
 # Functions for output messages
 error_msg() { echo -e "${BRED}! $1${NC}"; }
@@ -88,17 +85,15 @@ OPTIONAL_DEPENDENCIES=(
     )
 
 for cmd in "${DEPENDENCIES[@]}"; do
-    check_command "$cmd"
+    declare result
+    result=$(check_command "$cmd") # if not installed, exit
+    if [ "$result" -ne 0 ]; then
+        exit 1
+    fi
 done
 for cmd in "${OPTIONAL_DEPENDENCIES[@]}"; do
-    declare result
-    result=$(check_command "$cmd")
+    check_command "$cmd"
 done
-
-declare -g WALL_CURRENT
-declare -g WALL_LIST
-declare -g WALL_LIST_CLEAN
-declare -g NEWNAME
 
 WALL_CURRENT=$(readlink -fn "$WALL_DIR/current")
 WALL_LIST=$(for file in "$WALL_DIR"/*; do [ "$(basename "$file")" != "current" ] && basename "$file"; done)
@@ -326,6 +321,8 @@ wall_man() {
 
     # Checking if it has any '-' in the start of the argument
     if [[ "$WALLNAME" =~ ^-.* ]]; then
+        # So it doesn't change the wallpaper to a invalid flag:
+        # e.g.: backdrop -g | invalid argument -g
         error_msg "Invalid argument: $WALLNAME"
         return 1
     fi
@@ -387,5 +384,5 @@ if [ ! -f "$CONFIG" ]; then
 fi
 
 # Execute main function
-WALLNAME="${1,,}"
+declare -g WALLNAME="${1,,}"
 wall_man "$@"
