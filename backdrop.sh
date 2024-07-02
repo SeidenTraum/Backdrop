@@ -25,6 +25,7 @@ declare -g WALL_CURRENT
 declare -g WALL_LIST
 declare -g WALL_LIST_CLEAN
 declare -g NEWNAME
+declare -g RANDOM_LIST
 
 # Color codes
 declare -r YELLOW="\033[0;33m"
@@ -239,6 +240,18 @@ randomizer() {
     return 0
 }
 
+set_list() {
+    # Created to be used with the randomizer
+    # Takes multiple inputs, writes them to a file
+    # Used to make custom lists to be randomized
+    local -a list=("$@")
+
+    echo "" > "$RANDOM_LIST" # Clearing the file
+    for wallpaper in "${list[@]}"; do
+        echo "$wallpaper" > "$RANDOM_LIST" # Appending the list to the file
+    done
+}
+
 set_wallpaper() {
     # Moving the code from the main function to here,
     # it's too confusing there
@@ -403,6 +416,21 @@ wall_man() {
             local random=true
             local interval="$2"
             ;;
+        -sr|--set-random)
+            # Gives a custom random list or resets it
+            # Checking if the argument is empty, and if so, make the random list be of every wallpaper
+            if [ -z "$2" ]; then
+                set_list "$WALL_LIST"
+                cat "$RANDOM_LIST"
+                return 0
+            fi
+            # Otherwise, make the random list be of the given arguments from the 2nd to the last
+            # (since it'll be only the flag)
+            echo "${@:2}"
+            set_list "${@:2}"
+            cat "$RANDOM_LIST"
+            return 0
+            ;;
         *)
             # Concatenate all arguments if no flag is provided
             if [ "$#" -gt 1 ]; then
@@ -438,6 +466,7 @@ wall_man() {
 
 # Parsing config file
 CONFIG="$HOME/.config/backdrop/bd.config"
+RANDOM_LIST="$(config_parse "random_list")"
 WALL_DIR="$(config_parse "wallpaper_dir")"
 ENABLE_NOTIFICATIONS="$(config_parse "enable_notifications")"
 ENABLE_FZF="$(config_parse "enable_fzf")"
