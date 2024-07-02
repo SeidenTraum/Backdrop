@@ -401,6 +401,10 @@ wall_man() {
         -w|--wofi)
             WALLNAME=$(wofi_set)
             ;;
+        -ra|--random)
+            local random=true
+            local interval="$2"
+            ;;
         *)
             # Concatenate all arguments if no flag is provided
             if [ "$#" -gt 1 ]; then
@@ -410,13 +414,26 @@ wall_man() {
     esac
 
     # Checking if it has any '-' in the start of the argument
-    if [[ "$WALLNAME" =~ ^-.* ]]; then
+    if [[ "$WALLNAME" =~ ^-.* ]] && [ "$random" == false ]; then
         # So it doesn't change the wallpaper to a invalid flag:
         # e.g.: backdrop -g | invalid argument -g
         error_msg "Invalid argument: $WALLNAME"
+        # Using && random so the randomization doesn't get stopped by this
         return 1
     fi
 
+    # Checking that interval has a number
+    if [ -z "$interval" ]; then
+        interval=120
+    fi
+
+    if [ "$random" == true ]; then
+        while true; do
+            WALLNAME=$(randomizer "$WALL_LIST")
+            sleep "$interval"
+            set_wallpaper "$WALLNAME"
+        done
+    else
         set_wallpaper "$WALLNAME"
     fi
 }
@@ -481,4 +498,3 @@ fi
 # Execute main function
 WALLNAME="${1,,}"
 wall_man "$@"
-
