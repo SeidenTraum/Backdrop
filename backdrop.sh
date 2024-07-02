@@ -226,6 +226,21 @@ remove_wallpaper() {
     return 0
 }
 
+randomizer() {
+    # Randomly selects a wallpaper from a given list
+    local list="$1"
+    local result
+
+    while true; do # Loops until a wallpaper other than the current one is selected
+        result=$(echo "$list" | shuf -n 1)
+        if [ "$result" != "$WALL_CURRENT" ]; then
+            echo "$result"
+            return 0
+        fi
+    done
+    return 1
+}
+
 # Display help message
 show_help() {
     info_msg "A simple script to manage wallpapers in ${YELLOW}Hyprland."
