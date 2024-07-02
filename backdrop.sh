@@ -338,7 +338,7 @@ wall_man() {
                 elif [ "$color" -eq 3 ]; then
                     info_msg "${PINK}$wallpaper${NC}"
                     color+=1
-                else 
+                else
                     color=0
                 fi
             done <<< "$WALL_LIST_CLEAN"
