@@ -241,6 +241,61 @@ randomizer() {
     return 1
 }
 
+set_wallpaper() {
+    # Moving the code from the main function to here,
+    # it's too confusing there
+    local wallpaper="$1"
+
+    wallpaper="${wallpaper,,}"
+    wallpaper="${wallpaper// /-}"
+
+    # Check if the wallpaper exists
+    if [ ! -f "$WALL_DIR/$wallpaper" ]; then
+        error_msg "The wallpaper ${YELLOW}${wallpaper}${RED} does not exist"
+        info_msg "Trying to find the wallpaper by pattern matching..."
+        wallpaper=${wallpaper%.png} # removing .png from $WALLNAME
+        wallpaper=$(fuzzy_search "$WALL_LIST" "$wallpaper")
+        if [ -z "$wallpaper" ]; then
+            error_msg "The wallpaper ${YELLOW}${wallpaper}${RED} was not found by pattern matching"
+            return 1
+        fi
+        # checking if the list is bigger than 1
+        if [ "$(echo "$wallpaper" | wc -l)" -gt 1 ]; then
+            warning_msg "The wallpaper was found multiple times\n${YELLOW}${wallpaper}${NC}"
+            return 1
+        fi
+        success_msg "The wallpaper was found by pattern matching!!"
+    fi
+
+    if pgrep -f "swaybg" &> /dev/null; then
+        pkill -f "swaybg" >/dev/null 2>&1
+    fi
+
+    # Removing the path from $WALL_CURRENT
+    WALL_CURRENT=${WALL_CURRENT##*/}
+
+    if [ "$wallpaper" != "$WALL_CURRENT" ]; then
+        ln -fsn "$WALL_DIR/$wallpaper" "$WALL_DIR/current" # symlink to current
+        if (swaybg -i "$WALL_DIR/current" -m fill &>/dev/null & disown); then # sets wallpaper
+            success_msg "Wallpaper was changed successfully!!"
+            info_msg "> $wallpaper"
+            notify_user "$wallpaper"
+        else
+            error_msg "An error occurred while changing wallpaper"
+            exit 1
+        fi
+    else
+        if (swaybg -i "$WALL_DIR/current" -m fill &>/dev/null & disown); then
+            success_msg "Wallpaper was changed successfully!!"
+            info_msg "> $wallpaper"
+            notify_user "$wallpaper"
+        else
+            error_msg "An error occurred while changing wallpaper"
+            exit 1
+        fi
+    fi
+}
+
 # Display help message
 show_help() {
     info_msg "A simple script to manage wallpapers in ${YELLOW}Hyprland."
@@ -362,53 +417,7 @@ wall_man() {
         return 1
     fi
 
-    WALLNAME="${WALLNAME,,}"
-    WALLNAME="${WALLNAME// /-}"
-
-    # Check if the wallpaper exists
-    if [ ! -f "$WALL_DIR/$WALLNAME" ]; then
-        error_msg "The wallpaper ${YELLOW}${WALLNAME}${RED} does not exist"
-        info_msg "Trying to find the wallpaper by pattern matching..."
-        WALLNAME=${WALLNAME%.png} # removing .png from $WALLNAME
-        WALLNAME=$(fuzzy_search "$WALL_LIST" "$WALLNAME")
-        if [ -z "$WALLNAME" ]; then
-            error_msg "The wallpaper ${YELLOW}${WALLNAME}${RED} was not found by pattern matching"
-            return 1
-        fi
-        # checking if the list is bigger than 1
-        if [ "$(echo "$WALLNAME" | wc -l)" -gt 1 ]; then
-            warning_msg "The wallpaper was found multiple times\n${YELLOW}${WALLNAME}${NC}"
-            return 1
-        fi
-        success_msg "The wallpaper was found by pattern matching!!"
-    fi
-
-    if pgrep -f "swaybg" &> /dev/null; then
-        pkill -f "swaybg" >/dev/null 2>&1
-    fi
-
-    # Removing the path from $WALL_CURRENT
-    WALL_CURRENT=${WALL_CURRENT##*/}
-
-    if [ "$WALLNAME" != "$WALL_CURRENT" ]; then
-        ln -fsn "$WALL_DIR/$WALLNAME" "$WALL_DIR/current"
-        if (swaybg -i "$WALL_DIR/current" -m fill &>/dev/null & disown); then
-            success_msg "Wallpaper was changed successfully!!"
-            info_msg "> $WALLNAME"
-            notify_user "$WALLNAME"
-        else
-            error_msg "An error occurred while changing wallpaper"
-            exit 1
-        fi
-    else
-        if (swaybg -i "$WALL_DIR/current" -m fill &>/dev/null & disown); then
-            success_msg "Wallpaper was changed successfully!!"
-            info_msg "> $WALLNAME"
-            notify_user "$WALLNAME"
-        else
-            error_msg "An error occurred while changing wallpaper"
-            exit 1
-        fi
+        set_wallpaper "$WALLNAME"
     fi
 }
 
