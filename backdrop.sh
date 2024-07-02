@@ -231,14 +231,12 @@ randomizer() {
     local list="$1"
     local result
 
-    while true; do # Loops until a wallpaper other than the current one is selected
+    while [ "$result" = "$WALL_CURRENT" ]; do
+        # Loops until the sorted result is different from the current wallpaper
         result=$(echo "$list" | shuf -n 1)
-        if [ "$result" != "$WALL_CURRENT" ]; then
-            echo "$result"
-            return 0
-        fi
     done
-    return 1
+    echo "$result"
+    return 0
 }
 
 set_wallpaper() {
